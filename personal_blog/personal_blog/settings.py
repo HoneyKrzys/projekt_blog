@@ -18,9 +18,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+import os
+from dotenv import load_dotenv
+load_dotenv()
+print("CLOUDINARY_URL =", os.getenv("CLOUDINARY_URL"))
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-qxo%pg=$sif9-14@37-w(*mb0f5j(q44*3xad4+y(5#q=al)98'
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -40,7 +44,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # "accounts",
     'accounts.apps.AccountsConfig',
+    'cloudinary',
+    'cloudinary_storage',
 ]
+import cloudinary
+cloudinary.config(cloudinary_url=os.getenv("CLOUDINARY_URL"))
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -77,11 +86,16 @@ WSGI_APPLICATION = 'personal_blog.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+import dj_database_url
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(conn_max_age=600)
 }
 
 
@@ -137,3 +151,8 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # zezwala na dłuższą sesję
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+from django.core.files.storage import default_storage
+from cloudinary_storage.storage import MediaCloudinaryStorage
+
+# Wymuś globalnie MediaCloudinaryStorage (jeśli coś blokuje default)
+default_storage._wrapped = MediaCloudinaryStorage()
